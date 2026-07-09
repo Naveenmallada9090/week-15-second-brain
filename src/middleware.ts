@@ -6,6 +6,7 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string;
+      user?: any;
     }
   }
 }
@@ -36,17 +37,18 @@ export const userMiddleware = (
   }
 
   try {
-    const payload = jwt.verify(token, JWT_PASSWORD);
-    
-    // Check if payload is an object and has an id property of type string
-    if (typeof payload === "object" && payload !== null && "id" in payload && typeof (payload as any).id === "string") {
-      req.userId = (payload as any).id;
-      next();
-    } else {
-      return res.status(403).json({
-        message: "Invalid token payload",
-      });
-    }
+const payload = jwt.verify(token, JWT_PASSWORD);
+     
+     // Check if payload is an object and has an id property of type string
+     if (typeof payload === "object" && payload !== null && "id" in payload && typeof (payload as any).id === "string") {
+       req.userId = (payload as any).id;
+       req.user = payload;
+       next();
+     } else {
+       return res.status(403).json({
+         message: "Invalid token payload",
+       });
+     }
   } catch (err) {
     return res.status(403).json({
       message: "Invalid token",

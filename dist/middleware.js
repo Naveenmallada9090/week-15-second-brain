@@ -21,6 +21,7 @@ export const userMiddleware = (req, res, next) => {
         // Check if payload is an object and has an id property of type string
         if (typeof payload === "object" && payload !== null && "id" in payload && typeof payload.id === "string") {
             req.userId = payload.id;
+            req.user = payload;
             next();
         }
         else {
