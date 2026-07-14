@@ -1,57 +1,23 @@
 import type { NextFunction, Request, Response } from "express";
+import type { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
 import { JWT_PASSWORD } from "./config.js";
 
-declare global {
-  namespace Express {
-    interface Request {
-      userId?: string;
-      user?: any;
+export const userMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    const header = req.headers["authorization"];
+    const decoded = jwt.verify(header as string, JWT_PASSWORD)
+    if (decoded) {
+        if (typeof decoded === "string") {
+            res.status(403).json({
+                message: "You are not logged in"
+            })
+            return;    
+        }
+        req.userId = (decoded as JwtPayload).id;
+        next()
+    } else {
+        res.status(403).json({
+            message: "You are not logged in"
+        })
     }
-  }
 }
-
-export const userMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    return res.status(403).json({
-      message: "Authorization header missing",
-    });
-  }
-  
-  const tokenParts = authHeader.split(" ");
-  const token = 
-    tokenParts.length === 2 && tokenParts[0] === "Bearer" 
-      ? tokenParts[1] 
-      : authHeader;
-
-  if (!token) {
-    return res.status(403).json({
-      message: "Invalid authorization header",
-    });
-  }
-
-  try {
-const payload = jwt.verify(token, JWT_PASSWORD);
-     
-     // Check if payload is an object and has an id property of type string
-     if (typeof payload === "object" && payload !== null && "id" in payload && typeof (payload as any).id === "string") {
-       req.userId = (payload as any).id;
-       req.user = payload;
-       next();
-     } else {
-       return res.status(403).json({
-         message: "Invalid token payload",
-       });
-     }
-  } catch (err) {
-    return res.status(403).json({
-      message: "Invalid token",
-    });
-  }
-};

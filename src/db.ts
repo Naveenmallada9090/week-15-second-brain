@@ -1,46 +1,40 @@
-import mongoose from "mongoose";
-import { model, Schema } from "mongoose";
-import type { Document } from "mongoose";
 
-export interface User extends Document {
-    username: string;
-    password: string;
-}
+import mongoose, {model, Schema} from "mongoose";
 
-export interface Content extends Document {
-    type: string;
-    link: string;
-    title: string;
-    tags: mongoose.Types.ObjectId[];
-    userId: mongoose.Types.ObjectId;
-}
+// Connect to MongoDB with error handling
+const connectDB = async () => {
+    try {
+        await mongoose.connect("mongodb+srv://malladanaveen_db_user:oeIMlyK2zLEE7hXw@cluster0.wuw1buo.mongodb.net/brainlydb?retryWrites=true&w=majority");
+        console.log("Connected to MongoDB");
+    } catch (error) {
+        console.error("MongoDB connection error:", error);
+        process.exit(1);
+    }
+};
 
-export interface Link extends Document {
-    hash: string;
-    userId: mongoose.Types.ObjectId;
-}
+// Call the connection function
+connectDB();
 
-mongoose.connect("mongodb+srv://malladanaveen_db_user:oeIMlyK2zLEE7hXw@cluster0.wuw1buo.mongodb.net/?appName=Cluster0");
-
-const UserSchema = new Schema<User>({
+// Define schemas and models
+const UserSchema = new Schema({
     username: {type: String, unique: true},
     password: String
-})
+});
 
-export const UserModel = model<User>("User", UserSchema);
+export const UserModel = model("User", UserSchema);
 
-const ContentSchema = new Schema<Content> ({
-    type: String,
-    link: String,
+const ContentSchema = new Schema({
     title: String,
+    link: String,
     tags: [{type: mongoose.Types.ObjectId, ref: 'Tag'}],
+    type: String,
     userId: {type: mongoose.Types.ObjectId, ref: 'User', required: true },
-})
+});
 
-const LinkSchema = new Schema<Link> ({
+const LinkSchema = new Schema({
     hash: String,
-    userId: {type: mongoose.Types.ObjectId, ref: 'User', required: true }
-})
+    userId: {type: mongoose.Types.ObjectId, ref: 'User', required: true, unique: true },
+});
 
-export const ContentModel = model<Content>("Content", ContentSchema);
-export const LinkModel = model<Link>("Links", LinkSchema);
+export const LinkModel = model("Links", LinkSchema);
+export const ContentModel = model("Content", ContentSchema);
