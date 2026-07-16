@@ -73,9 +73,18 @@ app.get("/api/v1/content", userMiddleware, async (req, res) => {
 });
 app.delete("/api/v1/content", userMiddleware, async (req, res) => {
     const contentId = req.body.contentId;
-    await ContentModel.deleteMany({
-        contentId,
+    const content = await ContentModel.findOne({
+        _id: contentId,
         userId: req.userId
+    });
+    if (!content) {
+        res.status(404).json({
+            message: "Content not found or you don't have permission to delete it"
+        });
+        return;
+    }
+    await ContentModel.deleteOne({
+        _id: contentId
     });
     res.json({
         message: "Deleted"
