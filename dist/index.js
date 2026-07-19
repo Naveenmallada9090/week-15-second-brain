@@ -1,6 +1,7 @@
 import express from "express";
 import { random } from "./utils.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { ContentModel, LinkModel, UserModel } from "./db.js";
 import { JWT_PASSWORD } from "./config.js";
 import { userMiddleware } from "./middleware.js";
@@ -44,7 +45,7 @@ app.post("/api/v1/signin", async (req, res) => {
     }
     else {
         res.status(403).json({
-            message: "Incorrrect credentials"
+            message: "Incorrect credentials"
         });
     }
 });
@@ -55,7 +56,7 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
         link,
         type,
         title: req.body.title,
-        userId: req.userId,
+        userId: new mongoose.Types.ObjectId(Array.isArray(req.userId) ? req.userId[0] : req.userId),
         tags: []
     });
     res.json({
@@ -63,19 +64,21 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
     });
 });
 app.get("/api/v1/content", userMiddleware, async (req, res) => {
-    const userId = req.userId;
+    const userId = Array.isArray(req.userId) ? req.userId[0] : req.userId;
     const content = await ContentModel.find({
-        userId: userId
+        userId: new mongoose.Types.ObjectId(userId)
     }).populate("userId", "username");
     res.json({
         content
     });
 });
 app.delete("/api/v1/content", userMiddleware, async (req, res) => {
-    const contentId = req.body.contentId;
+    const contentIdParam = req.body.contentId;
+    const contentId = Array.isArray(contentIdParam) ? contentIdParam[0] : contentIdParam;
+    const userId = Array.isArray(req.userId) ? req.userId[0] : req.userId;
     const content = await ContentModel.findOne({
-        _id: contentId,
-        userId: req.userId
+        _id: new mongoose.Types.ObjectId(contentId),
+        userId: new mongoose.Types.ObjectId(userId)
     });
     if (!content) {
         res.status(404).json({
@@ -84,7 +87,7 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
         return;
     }
     await ContentModel.deleteOne({
-        _id: contentId
+        _id: new mongoose.Types.ObjectId(contentId)
     });
     res.json({
         message: "Deleted"
@@ -92,9 +95,10 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
 });
 app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
     const share = req.body.share;
+    const userId = Array.isArray(req.userId) ? req.userId[0] : req.userId;
     if (share) {
         const existingLink = await LinkModel.findOne({
-            userId: req.userId
+            userId: new mongoose.Types.ObjectId(userId)
         });
         if (existingLink) {
             res.json({
@@ -104,16 +108,16 @@ app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
         }
         const hash = random(10);
         await LinkModel.create({
-            userId: req.userId,
+            userId: new mongoose.Types.ObjectId(userId),
             hash: hash
         });
         res.json({
-            hash
+            hash: hash
         });
     }
     else {
         await LinkModel.deleteOne({
-            userId: req.userId
+            userId: new mongoose.Types.ObjectId(userId)
         });
     }
 });

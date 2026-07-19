@@ -10,7 +10,7 @@ export const userMiddleware = (req: Request, res: Response, next: NextFunction) 
         if (typeof decoded === "string") {
             res.status(403).json({
                 message: "You are not logged in"
-            })
+            });
             return;    
         }
         req.userId = (decoded as JwtPayload).id;
@@ -18,6 +18,7 @@ export const userMiddleware = (req: Request, res: Response, next: NextFunction) 
     } else {
         res.status(403).json({
             message: "You are not logged in"
-        })
+        });
+        return;
     }
 }

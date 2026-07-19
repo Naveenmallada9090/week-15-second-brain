@@ -17,6 +17,7 @@ export const userMiddleware = (req, res, next) => {
         res.status(403).json({
             message: "You are not logged in"
         });
+        return;
     }
 };
 //# sourceMappingURL=middleware.js.map
