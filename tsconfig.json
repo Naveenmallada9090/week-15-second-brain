@@ -1,4 +1,4 @@
-﻿{
+{
   "compilerOptions": {
     "target": "esnext",
     "module": "commonjs",
@@ -9,7 +9,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
     "ignoreDeprecations": "6.0"
   },
   "include": ["src"],
