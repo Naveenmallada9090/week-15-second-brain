@@ -1,4 +1,7 @@
-export function random(len) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.random = random;
+function random(len) {
     let options = "qwertyuioasdfghjklzxcvbnm12345678";
     let length = options.length;
     let ans = "";
@@ -7,4 +10,3 @@ export function random(len) {
     }
     return ans;
 }
-//# sourceMappingURL=utils.js.map

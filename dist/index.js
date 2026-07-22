@@ -1,20 +1,25 @@
-import express from "express";
-import { random } from "./utils.js";
-import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-import { ContentModel, LinkModel, UserModel } from "./db.js";
-import { JWT_PASSWORD } from "./config.js";
-import { userMiddleware } from "./middleware.js";
-import cors from "cors";
-const app = express();
-app.use(express.json());
-app.use(cors());
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const utils_js_1 = require("./utils.js");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const mongoose_1 = __importDefault(require("mongoose"));
+const db_js_1 = require("./db.js");
+const config_js_1 = require("./config.js");
+const middleware_js_1 = require("./middleware.js");
+const cors_1 = __importDefault(require("cors"));
+const app = (0, express_1.default)();
+app.use(express_1.default.json());
+app.use((0, cors_1.default)());
 app.post("/api/v1/signup", async (req, res) => {
     // TODO: zod validation , hash the password
     const username = req.body.username;
     const password = req.body.password;
     try {
-        await UserModel.create({
+        await db_js_1.UserModel.create({
             username: username,
             password: password
         });
@@ -31,14 +36,14 @@ app.post("/api/v1/signup", async (req, res) => {
 app.post("/api/v1/signin", async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
-    const existingUser = await UserModel.findOne({
+    const existingUser = await db_js_1.UserModel.findOne({
         username,
         password
     });
     if (existingUser) {
-        const token = jwt.sign({
+        const token = jsonwebtoken_1.default.sign({
             id: existingUser._id
-        }, JWT_PASSWORD);
+        }, config_js_1.JWT_PASSWORD);
         res.json({
             token
         });
@@ -49,36 +54,36 @@ app.post("/api/v1/signin", async (req, res) => {
         });
     }
 });
-app.post("/api/v1/content", userMiddleware, async (req, res) => {
+app.post("/api/v1/content", middleware_js_1.userMiddleware, async (req, res) => {
     const link = req.body.link;
     const type = req.body.type;
-    await ContentModel.create({
+    await db_js_1.ContentModel.create({
         link,
         type,
         title: req.body.title,
-        userId: new mongoose.Types.ObjectId(Array.isArray(req.userId) ? req.userId[0] : req.userId),
+        userId: new mongoose_1.default.Types.ObjectId(Array.isArray(req.userId) ? req.userId[0] : req.userId),
         tags: []
     });
     res.json({
         message: "Content added"
     });
 });
-app.get("/api/v1/content", userMiddleware, async (req, res) => {
+app.get("/api/v1/content", middleware_js_1.userMiddleware, async (req, res) => {
     const userId = Array.isArray(req.userId) ? req.userId[0] : req.userId;
-    const content = await ContentModel.find({
-        userId: new mongoose.Types.ObjectId(userId)
+    const content = await db_js_1.ContentModel.find({
+        userId: new mongoose_1.default.Types.ObjectId(userId)
     }).populate("userId", "username");
     res.json({
         content
     });
 });
-app.delete("/api/v1/content", userMiddleware, async (req, res) => {
+app.delete("/api/v1/content", middleware_js_1.userMiddleware, async (req, res) => {
     const contentIdParam = req.body.contentId;
     const contentId = Array.isArray(contentIdParam) ? contentIdParam[0] : contentIdParam;
     const userId = Array.isArray(req.userId) ? req.userId[0] : req.userId;
-    const content = await ContentModel.findOne({
-        _id: new mongoose.Types.ObjectId(contentId),
-        userId: new mongoose.Types.ObjectId(userId)
+    const content = await db_js_1.ContentModel.findOne({
+        _id: new mongoose_1.default.Types.ObjectId(contentId),
+        userId: new mongoose_1.default.Types.ObjectId(userId)
     });
     if (!content) {
         res.status(404).json({
@@ -86,19 +91,19 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
         });
         return;
     }
-    await ContentModel.deleteOne({
-        _id: new mongoose.Types.ObjectId(contentId)
+    await db_js_1.ContentModel.deleteOne({
+        _id: new mongoose_1.default.Types.ObjectId(contentId)
     });
     res.json({
         message: "Deleted"
     });
 });
-app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
+app.post("/api/v1/brain/share", middleware_js_1.userMiddleware, async (req, res) => {
     const share = req.body.share;
     const userId = Array.isArray(req.userId) ? req.userId[0] : req.userId;
     if (share) {
-        const existingLink = await LinkModel.findOne({
-            userId: new mongoose.Types.ObjectId(userId)
+        const existingLink = await db_js_1.LinkModel.findOne({
+            userId: new mongoose_1.default.Types.ObjectId(userId)
         });
         if (existingLink) {
             res.json({
@@ -106,9 +111,9 @@ app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
             });
             return;
         }
-        const hash = random(10);
-        await LinkModel.create({
-            userId: new mongoose.Types.ObjectId(userId),
+        const hash = (0, utils_js_1.random)(10);
+        await db_js_1.LinkModel.create({
+            userId: new mongoose_1.default.Types.ObjectId(userId),
             hash: hash
         });
         res.json({
@@ -116,14 +121,14 @@ app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
         });
     }
     else {
-        await LinkModel.deleteOne({
-            userId: new mongoose.Types.ObjectId(userId)
+        await db_js_1.LinkModel.deleteOne({
+            userId: new mongoose_1.default.Types.ObjectId(userId)
         });
     }
 });
 app.get("/api/v1/brain/:shareLink", async (req, res) => {
     const hash = req.params.shareLink;
-    const link = await LinkModel.findOne({
+    const link = await db_js_1.LinkModel.findOne({
         hash
     });
     if (!link) {
@@ -133,11 +138,11 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
         return;
     }
     // userId
-    const content = await ContentModel.find({
+    const content = await db_js_1.ContentModel.find({
         userId: link.userId
     });
     console.log(link);
-    const user = await UserModel.findOne({
+    const user = await db_js_1.UserModel.findOne({
         _id: link.userId
     });
     if (!user) {
@@ -152,4 +157,3 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
     });
 });
 app.listen(3000);
-//# sourceMappingURL=index.js.map

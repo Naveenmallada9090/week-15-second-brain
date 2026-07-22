@@ -1,8 +1,14 @@
-import jwt from "jsonwebtoken";
-import { JWT_PASSWORD } from "./config.js";
-export const userMiddleware = (req, res, next) => {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.userMiddleware = void 0;
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const config_js_1 = require("./config.js");
+const userMiddleware = (req, res, next) => {
     const header = req.headers["authorization"];
-    const decoded = jwt.verify(header, JWT_PASSWORD);
+    const decoded = jsonwebtoken_1.default.verify(header, config_js_1.JWT_PASSWORD);
     if (decoded) {
         if (typeof decoded === "string") {
             res.status(403).json({
@@ -20,4 +26,4 @@ export const userMiddleware = (req, res, next) => {
         return;
     }
 };
-//# sourceMappingURL=middleware.js.map
+exports.userMiddleware = userMiddleware;
